@@ -4,6 +4,7 @@ import folium
 from streamlit_folium import folium_static, st_folium
 import networkx as nx
 from folium.plugins import Draw
+from folium.plugins import HeatMap, Draw
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -22,31 +23,34 @@ if uploaded_file is not None:
         # Load CSV Data
         df = pd.read_csv(uploaded_file)
 
-        # Display Dataset Preview
+        # Display Dataset
         st.subheader("📊 Data Preview")
         st.write(df.head())
 
-        # Check Required Columns
-        required_columns = {"Location", "Latitude", "Longitude", "Disaster Type", "Supplies Needed", "Priority"}
+        # Required Columns
+        required_columns = {"Location", "Latitude", "Longitude", "Disaster Type", "Supplies Needed", "Priority", "Intensity"}
         if not required_columns.issubset(df.columns):
-            st.error(f"CSV must contain the columns: {required_columns}")
+            st.error(f"CSV must contain these columns: {required_columns}")
         else:
-            # Initialize Editable Map
-            st.subheader("🗺️ Disaster Map (Edit Locations & Routes)")
+            # Initialize Map at the Dataset Center
             disaster_map = folium.Map(location=[df["Latitude"].mean(), df["Longitude"].mean()], zoom_start=6)
 
-            # Color Mapping for Disaster Types
+            # Marker Colors for Each Disaster Type
             color_map = {
                 "Flood": "blue",
                 "Earthquake": "red",
                 "Wildfire": "orange",
                 "Hurricane": "purple",
                 "Landslide": "brown",
+                "Tornado": "darkpurple",
+                "Drought": "lightred",
+                "Tsunami": "cadetblue",
+                "Volcano": "darkred",
                 "Other": "gray",
             }
 
-            # Add Markers for Each Disaster Location
-            for index, row in df.iterrows():
+            # Add Markers for Each Disaster
+            for _, row in df.iterrows():
                 folium.Marker(
                     location=[row["Latitude"], row["Longitude"]],
                     popup=(f"<b>Location:</b> {row['Location']}<br>"
@@ -56,16 +60,14 @@ if uploaded_file is not None:
                     icon=folium.Icon(color=color_map.get(row["Disaster Type"], "gray"), icon="info-sign"),
                 ).add_to(disaster_map)
 
-            # Enable Drawing Tool
+            # Heatmap for Disaster Intensity
+            heat_data = df[["Latitude", "Longitude", "Intensity"]].values.tolist()
+            HeatMap(heat_data, min_opacity=0.3, max_zoom=10, radius=15).add_to(disaster_map)
+
+            # Enable Drawing Tool for Custom Paths
             draw = Draw(export=True, show_geometry_on_click=True)
             draw.add_to(disaster_map)
 
-            # Display Map with Draw Feature
-            map_data = st_folium(disaster_map, width=700, height=500)
-
-            # AI-Based Route Optimization (Shortest Path)
-            st.subheader("🚛 AI-Optimized Route for Supply Distribution")
-            
             # Create Graph for Route Optimization
             G = nx.Graph()
             locations = df[["Location", "Latitude", "Longitude"]].values.tolist()
@@ -85,34 +87,39 @@ if uploaded_file is not None:
             # Choose a Starting Location (First Row)
             start_location = locations[0][0]
 
-            # Compute Shortest Paths
-            shortest_paths = nx.single_source_dijkstra_path(G, source=start_location)
+            # Compute AI Shortest Paths
+            try:
+                shortest_paths = nx.single_source_dijkstra_path(G, source=start_location)
 
-            # Convert Path to Coordinates
-            path_coordinates = []
-            for destination, path in shortest_paths.items():
-                route_coords = [[df.loc[df["Location"] == loc, "Latitude"].values[0], 
-                                 df.loc[df["Location"] == loc, "Longitude"].values[0]] for loc in path]
-                path_coordinates.append(route_coords)
+                # Convert Paths to Coordinates
+                path_coordinates = []
+                for destination, path in shortest_paths.items():
+                    route_coords = [[df.loc[df["Location"] == loc, "Latitude"].values[0],
+                                     df.loc[df["Location"] == loc, "Longitude"].values[0]] for loc in path]
+                    path_coordinates.append(route_coords)
 
-            # Draw Routes on Map
-            for route in path_coordinates:
-                folium.PolyLine(
-                    locations=route, color="blue", weight=3, opacity=0.7
-                ).add_to(disaster_map)
+                # Draw AI-Optimized Routes on Map
+                for route in path_coordinates:
+                    folium.PolyLine(
+                        locations=route, color="blue", weight=3, opacity=0.7
+                    ).add_to(disaster_map)
 
-            # Display Map Again (Updated with Routes)
-            map_data = st_folium(disaster_map, width=700, height=500)
+            except nx.NetworkXNoPath:
+                st.error("⚠️ No valid paths found. Try adding more locations.")
 
-            # Display Routes in Text
-            st.write("### 📍 AI-Generated Supply Routes:")
+            # Display the map with all features added
+            st.subheader("🗺️ Disaster Map")
+            map_data = st_folium(disaster_map, width=800, height=500)
+
+            # Show Drawn Data (User-Added Features)
+            if map_data and "all_drawings" in map_data:
+                st.write("✏️ User-Drawn Features:")
+                st.json(map_data["all_drawings"])
+                
+            # Display AI Routes in Text
+            st.subheader("🚛 AI-Optimized Routes")
             for destination, path in shortest_paths.items():
                 st.write(f"🚚 Route to {destination}: {' → '.join(path)}")
-
-            # Show Drawn Data (User Edits)
-            if map_data and "all_drawings" in map_data:
-                st.write("### ✏️ User-Drawn Features (Editable Data)")
-                st.json(map_data["all_drawings"])
 
     except Exception as e:
         st.error(f"Error loading CSV: {e}")
@@ -266,6 +273,3 @@ with st.sidebar:
     st.write(f"🍲 Food: **{(population * 2.1):,} kg**")
     st.write(f"🏥 Medical Kits: **{np.ceil(population/1000):.0f} units**")
     st.write(f"🛏️ Shelter: **{np.ceil(population/5):,} family tents**")
-
-
-
