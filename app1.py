@@ -201,7 +201,7 @@ with tabs[2]:
 
 # Emergency Calculator
 st.sidebar.header("🚨 Emergency Calculator")
-population = st.number_input("Affected population size:", min_value=1000, value=10000, step=1000)
+population = st.sidebar.number_input("Affected population size:", min_value=1000, value=10000, step=1000)
 st.sidebar.write(f"💧 Water: **{(population * 15):,} liters**")
 st.sidebar.write(f"🍲 Food: **{(population * 2.1):,} kg**")
 st.sidebar.write(f"🏥 Medical Kits: **{np.ceil(population/1000):.0f} units**")
