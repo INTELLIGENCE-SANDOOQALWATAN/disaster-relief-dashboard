@@ -146,7 +146,7 @@ overview = df.iloc[1:7, :2].copy()
 overview.columns = ["Category", "Details"]
 data["Overview"] = overview.dropna()
 
-# Infrastructure Dmg
+# Infrastructure Damage
 infra_damage = df.iloc[10:15, :3].copy()
 infra_damage.columns = ["Category", "Damage Details", "Estimated Cost (USD)"]
 infra_damage["Estimated Cost (USD)"] = (
@@ -173,11 +173,6 @@ for col in ["Deaths", "Houses Damaged"]:
         .pipe(pd.to_numeric, errors='coerce')
     )
 data["Region-Wise Impact"] = province_impact.dropna()
-
-# Key Stats
-key_stats = df.iloc[28:34, :2].copy()
-key_stats.columns = ["Statistic", "Value"]
-data["Key Statistics"] = key_stats.dropna()
 
 # Damage Analysis
 damage_loss = df.iloc[44:48, :7].copy()
@@ -228,8 +223,8 @@ st.markdown("""
 - Priority shelter allocation for displaced families.
 """)
 
-# Tabs for Data Section
-tabs = st.tabs(["[💰 Damage Analysis]", "[🏥 Infrastructure]", "[📈 Statistics]", "[📋 Full Data]"])
+# Tabs for Data Section (📈 Statistics Removed)
+tabs = st.tabs(["[💰 Damage Analysis]", "[🏥 Infrastructure]", "[📋 Full Data]"])
 with tabs[0]:
     if "Damage Analysis" in data:
         st.subheader("Financial Impact Assessment")
@@ -256,7 +251,7 @@ with tabs[1]:
         )
         ax.set_title("Estimated Repair Costs")
         st.pyplot(fig)
-with tabs[3]:
+with tabs[2]:
     st.subheader("Complete Dataset Overview")
     for section in data:
         if section not in ["Casualty Analysis"]:
