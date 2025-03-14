@@ -125,7 +125,7 @@ if uploaded_file is not None:
         st.error(f"Error loading CSV: {e}")
 
 
-# Sidebar: Upload Financial Data
+# Dashboard for Financial and Casualty Analysis
 st.sidebar.header("📂 Upload Your Data")
 uploaded_file = st.sidebar.file_uploader("Upload a CSV file", type=["csv"])
 
@@ -177,7 +177,7 @@ for col in damage_loss.columns[1:]:
     )
 data["Damage Analysis"] = damage_loss.dropna(how='all')
 
-# Tabs for Financial Data
+# Tabs for Data Section
 tabs = st.tabs(["[💰 Damage Analysis]", "[🏥 Infrastructure]", "[📋 Full Data]"])
 with tabs[0]:
     if "Damage Analysis" in data:
@@ -199,9 +199,9 @@ with tabs[2]:
     st.subheader("Complete Dataset Overview")
     st.dataframe(df, use_container_width=True)
 
-# 🚨 Emergency Calculator in Sidebar (Fixed)
+# Emergency Calculator
 st.sidebar.header("🚨 Emergency Calculator")
-population = st.sidebar.number_input("Affected population size:", min_value=1000, value=10000, step=1000)
+population = st.number_input("Affected population size:", min_value=1000, value=10000, step=1000)
 st.sidebar.write(f"💧 Water: **{(population * 15):,} liters**")
 st.sidebar.write(f"🍲 Food: **{(population * 2.1):,} kg**")
 st.sidebar.write(f"🏥 Medical Kits: **{np.ceil(population/1000):.0f} units**")
