@@ -46,6 +46,7 @@ if uploaded_file is not None:
                 "Drought": "lightred",
                 "Tsunami": "cadetblue",
                 "Volcano": "darkred",
+                "Heatwave": "pink",
                 "Other": "gray",
             }
 
@@ -65,8 +66,7 @@ if uploaded_file is not None:
             HeatMap(heat_data, min_opacity=0.3, max_zoom=10, radius=15).add_to(disaster_map)
 
             # Enable Drawing Tool for Custom Paths
-            draw = Draw(export=True, show_geometry_on_click=True)
-            draw.add_to(disaster_map)
+            Draw(export=True, show_geometry_on_click=True).add_to(disaster_map)
 
             # Create Graph for Route Optimization
             G = nx.Graph()
@@ -115,7 +115,7 @@ if uploaded_file is not None:
             if map_data and "all_drawings" in map_data:
                 st.write("✏️ User-Drawn Features:")
                 st.json(map_data["all_drawings"])
-                
+
             # Display AI Routes in Text
             st.subheader("🚛 AI-Optimized Routes")
             for destination, path in shortest_paths.items():
@@ -123,7 +123,6 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Error loading CSV: {e}")
-
 # Dashboard for Financial and Casualty Analysis
 st.sidebar.header("📂 Upload Your Data")
 uploaded_file = st.sidebar.file_uploader("Upload a CSV file", type=["csv"])
